@@ -1,9 +1,13 @@
-var system;
+var system, system2, system3;
 
 function setup() {
-  createCanvas(720, 400);
+  createCanvas(screen.availWidth*.75, screen.availHeight*.75);
   
-	system = new ParticleSystem(createVector(width/2, height/2));
+  frameRate(60);
+  
+  system = new ParticleSystem(createVector(width/2 + width/3, height/2));
+  system2 = new ParticleSystem(createVector(width/2, height/2));
+  system3 = new ParticleSystem(createVector(width/2 - width/3, height/2));
 }
 
 function draw() {
@@ -11,5 +15,8 @@ function draw() {
   noStroke();
   system.addParticle();
   system.run();
-  
+  system2.addParticle();
+  system2.run();
+  system3.addParticle();
+  system3.run();
 }
