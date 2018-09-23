@@ -1,5 +1,9 @@
 var movementTypes = ['Linear', 'Circular', 'Linear&Circular']
 
+function returnIfUndefined(obj, optionalReturn) {
+  return (obj !== undefined) ? obj : optionalReturn;
+}
+
 var Particle = function (pos, vel, acc, opts = {}) {
   this.position = pos.copy();
   this.velocity = vel.copy();
@@ -13,16 +17,16 @@ var Particle = function (pos, vel, acc, opts = {}) {
   this.lifespan = opts.lifespan || 5;
   this.format = opts.format || "Ellipse";
 
-  this.fill = (opts.fill !== undefined) ? opts.fill : true;
+  this.fill = returnIfUndefined(opts.fill, true);
   this.fillColor = opts.fillColor || [255, 0, 0];
   this.fillEndColor = opts.fillEndColor || [255, 100, 50];
-  this.fillTransparency = (opts.fillTransparency !== undefined) ? opts.fillTransparency : 1;
+  this.fillTransparency = returnIfUndefined(opts.fillTransparency, 1);
   this.fillLifetime = opts.fillLifetime || false;
 
-  this.stroke = (opts.stroke !== undefined) ? opts.stroke : true;
+  this.stroke = returnIfUndefined(opts.stroke, true);
   this.strokeWeight = (opts.strokeWeight !== undefined) ? opts.strokeWeight * opts.size : 1;
   this.strokeColor = opts.strokeColor || [255, 255, 255];
-  this.strokeEndColor = [128, 128, 128];
+  this.strokeEndColor = opts.strokeEndColor || [128, 128, 128];
   this.strokeTransparency = (opts.strokeTransparency !== undefined) ? opts.strokeTransparency : 1;
   this.strokeLifetime = opts.strokeLifetime || false;
 
@@ -33,7 +37,7 @@ var Particle = function (pos, vel, acc, opts = {}) {
   this.strokeEndColor = color(this.strokeEndColor[0], this.strokeEndColor[1], this.strokeEndColor[2], this.strokeTransparency * 255);
 
   this.movement = opts.movement || {
-    type: movementTypes[3]
+    type: movementTypes[0]
   };
 
   ///////////////////////////
@@ -45,11 +49,33 @@ var Particle = function (pos, vel, acc, opts = {}) {
   this.initialSize = this.size;
   // Used for parameters that change with lifetime
   this.invertAge = 1;
+
+  this.start();
 };
 
+Particle.prototype.start = function () {
+  switch (this.movement.type) {
+    case movementTypes[0]:
+      break;
+    case movementTypes[1]:
+    case movementTypes[2]:
+
+      if (this.pivotPos === undefined) {
+        this.pivotPos = this.position;
+      }
+      var ageToRad = this.lifetime / this.lifespan * 2 * PI * (this.movement.circles || 1);
+      this.position = createVector(
+        this.pivotPos.x + cos(ageToRad) * this.movement.radius,
+        this.pivotPos.y + sin(ageToRad) * this.movement.radius
+      );
+
+      break;
+  }
+}
+
 Particle.prototype.run = function () {
-  this.update();
   this.display();
+  this.update();
 };
 
 Particle.prototype.update = function () {
@@ -74,10 +100,12 @@ Particle.prototype.update = function () {
 
   if (this.fillLifetime === true) {
     this.fillColor.setAlpha(this.fillTransparency * invertAge255);
+    this.fillEndColor.setAlpha(this.fillTransparency * invertAge255);
   }
 
   if (this.strokeLifetime === true) {
     this.strokeColor.setAlpha(this.strokeTransparency * invertAge255);
+    this.strokeEndColor.setAlpha(this.strokeTransparency * invertAge255);
   }
 
   if (this.sizeLifetime === true) {
@@ -123,21 +151,21 @@ Particle.prototype.linearMovement = function () {
 }
 
 Particle.prototype.circularMovement = function () {
-  var ageToRad = this.lifetime / this.lifespan * 2 * PI * (this.movement.speed || 1);
+  var ageToRad = this.lifetime / this.lifespan * 2 * PI * (this.movement.circles || 1);
   this.position = createVector(
     this.initialPosition.x + cos(ageToRad) * this.movement.radius,
     this.initialPosition.y + sin(ageToRad) * this.movement.radius
   );
 }
 
-Particle.prototype.linearAndCircularMovement = function(){
-  if(this.pivotPos === undefined){
+Particle.prototype.linearAndCircularMovement = function () {
+  if (this.pivotPos === undefined) {
     this.pivotPos = this.position;
   }
 
   this.velocity.add(this.acceleration);
-  this.pivotPos.add(this.velocity);  
-  
+  this.pivotPos.add(this.velocity);
+
   var ageToRad = this.lifetime / this.lifespan * 2 * PI * (this.movement.circles || 1);
   this.position = createVector(
     this.pivotPos.x + cos(ageToRad) * this.movement.radius,
