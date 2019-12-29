@@ -1,5 +1,5 @@
-function getRandomBool(){
-	return Math.random() >= 0.5
+function getRandomBool(chance = 0.5) {
+	return Math.random() <= chance;
 }
 
 const _frameRate = 60;
@@ -8,14 +8,15 @@ const deltaTime = 1 / _frameRate;
 const iterations = 50 + Math.random() * 100;
 let randomWalker;
 const startingAngle = 0;
-const startingDistance = Math.random() * 100;
-
-let timeDelta = 1;
-const speed = 3;
-const timeScale = speed * (deltaTime / iterations);
+const startingDistance = 20 + Math.random() * 100;
 
 const modeCounts = 2;
 const mode = Math.floor(Math.random() * modeCounts);
+const increaseSize = getRandomBool();
+
+const minRad = 20;
+const maxRad = 80;
+const currentRad = minRad + Math.random() * (maxRad - minRad);
 
 // --- COLORS ---
 let allColors = [];
@@ -29,6 +30,15 @@ const colorPalleteStrings = [
 ];
 // --- END COLORS ---
 
+const cosMod = 1 + Math.floor(Math.random() * 3);
+const sinMod = 1 + Math.floor(Math.random() * 3);
+
+const moveRight = getRandomBool();
+
+let timeDelta = 1;
+const speed = (3 - (cosMod + sinMod) / 3) * (moveRight ? 1 : -1);
+const timeScale = speed * (deltaTime / iterations);
+
 function setup() {
 	randomSeed(millis());
 
@@ -40,17 +50,23 @@ function setup() {
 		colorPalleteStrings[floor(random(0, colorPalleteStrings.length))];
 	allColors = shuffle(allColors, false);
 
-	if(getRandomBool()){ // NO STROKE
+	if (getRandomBool()) {
+		// NO STROKE
 		noStroke();
-	}else{	// STROKE
-		if(getRandomBool()){ // DEFAULT COLOR
-			if(getRandomBool()){ // WHITE
-				stroke(255)
-			}else{ // BLACK
-				stroke(0)
+	} else {
+		// STROKE
+		if (getRandomBool()) {
+			// DEFAULT COLOR
+			if (getRandomBool()) {
+				// WHITE
+				stroke(255);
+			} else {
+				// BLACK
+				stroke(0);
 			}
-		}else{ // GET COLOR FROM PALLETE
-			stroke(allColors[allColors.length-1])
+		} else {
+			// GET COLOR FROM PALLETE
+			stroke(allColors[allColors.length - 1]);
 		}
 	}
 
@@ -99,7 +115,7 @@ const RandomWalker = function(
 ) {
 	this.center = createVector(centerX, centerY);
 	this.pos = createVector(0, 0);
-	this.radius = 80;
+	this.radius = currentRad;
 
 	this.angle = angle;
 	this.distance = distance;
@@ -111,11 +127,12 @@ const RandomWalker = function(
 
 RandomWalker.prototype.update = function() {
 	this.pos = createVector(
-		cos(this.angle) * this.distance,
-		sin(this.angle) * this.distance
+		cos(this.angle * cosMod) * this.distance,
+		sin(this.angle * sinMod) * this.distance
 	);
 	this.angle += this.delta;
-	this.distance += this.delta;
+
+	if (increaseSize) this.distance += this.delta;
 };
 
 RandomWalker.prototype.render = function() {
@@ -130,9 +147,7 @@ RandomWalker.prototype.render = function() {
 			ellipse(x, y, r);
 			break;
 		case 1:
-			rect(
-				x-r/2,y-r/2,r,r
-			)
+			rect(x - r / 2, y - r / 2, r, r);
 			break;
 	}
 
