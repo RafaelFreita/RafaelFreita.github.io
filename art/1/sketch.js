@@ -1,3 +1,7 @@
+function getRandomBool(){
+	return Math.random() >= 0.5
+}
+
 const _frameRate = 60;
 const deltaTime = 1 / _frameRate;
 
@@ -9,6 +13,9 @@ const startingDistance = Math.random() * 100;
 let timeDelta = 1;
 const speed = 3;
 const timeScale = speed * (deltaTime / iterations);
+
+const modeCounts = 2;
+const mode = Math.floor(Math.random() * modeCounts);
 
 // --- COLORS ---
 let allColors = [];
@@ -29,11 +36,23 @@ function setup() {
 	background(255);
 	frameRate(_frameRate);
 
-	noStroke();
-
 	allColors =
 		colorPalleteStrings[floor(random(0, colorPalleteStrings.length))];
 	allColors = shuffle(allColors, false);
+
+	if(getRandomBool()){ // NO STROKE
+		noStroke();
+	}else{	// STROKE
+		if(getRandomBool()){ // DEFAULT COLOR
+			if(getRandomBool()){ // WHITE
+				stroke(255)
+			}else{ // BLACK
+				stroke(0)
+			}
+		}else{ // GET COLOR FROM PALLETE
+			stroke(allColors[allColors.length-1])
+		}
+	}
 
 	//createLoop({duration:10, gif:true})
 }
@@ -102,12 +121,20 @@ RandomWalker.prototype.update = function() {
 RandomWalker.prototype.render = function() {
 	fill(colorPallete[this.renderItt % colorPallete.length]);
 
-	ellipse(
-		this.center.x + this.pos.x,
-		this.center.y + this.pos.y,
-		this.radius,
-		this.radius
-	);
+	const x = this.center.x + this.pos.x;
+	const y = this.center.y + this.pos.y;
+	const r = this.radius;
+
+	switch (mode) {
+		case 0:
+			ellipse(x, y, r);
+			break;
+		case 1:
+			rect(
+				x-r/2,y-r/2,r,r
+			)
+			break;
+	}
 
 	this.renderItt++;
 };
